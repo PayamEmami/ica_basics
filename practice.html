@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.16">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; ICA with Python – Independent Component Analysis (ICA)</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./exercises.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2051dbbaa7ae7a279e016470f480e120.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-07d3b7306fa26381014a84f1b07e92f7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./practice.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">ICA with Python</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Independent Component Analysis (ICA)</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Independent Component Analysis (ICA)</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">ICA with Python</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Exercises: ICA of leukemia gene expression</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">2.1</span> Setup</a></li>
+  <li><a href="#simulate-expression-data" id="toc-simulate-expression-data" class="nav-link" data-scroll-target="#simulate-expression-data"><span class="header-section-number">2.2</span> Simulate expression data</a></li>
+  <li><a href="#use-pca-as-a-reference" id="toc-use-pca-as-a-reference" class="nav-link" data-scroll-target="#use-pca-as-a-reference"><span class="header-section-number">2.3</span> Use PCA as a reference</a></li>
+  <li><a href="#fit-fastica" id="toc-fit-fastica" class="nav-link" data-scroll-target="#fit-fastica"><span class="header-section-number">2.4</span> Fit FastICA</a></li>
+  <li><a href="#match-components-to-the-simulated-sources" id="toc-match-components-to-the-simulated-sources" class="nav-link" data-scroll-target="#match-components-to-the-simulated-sources"><span class="header-section-number">2.5</span> Match components to the simulated sources</a></li>
+  <li><a href="#plot-the-component-scores" id="toc-plot-the-component-scores" class="nav-link" data-scroll-target="#plot-the-component-scores"><span class="header-section-number">2.6</span> Plot the component scores</a></li>
+  <li><a href="#identify-genes-with-large-mixing-weights" id="toc-identify-genes-with-large-mixing-weights" class="nav-link" data-scroll-target="#identify-genes-with-large-mixing-weights"><span class="header-section-number">2.7</span> Identify genes with large mixing weights</a></li>
+  <li><a href="#useful-fastica-arguments" id="toc-useful-fastica-arguments" class="nav-link" data-scroll-target="#useful-fastica-arguments"><span class="header-section-number">2.8</span> Useful FastICA arguments</a></li>
+  <li><a href="#whitening" id="toc-whitening" class="nav-link" data-scroll-target="#whitening"><span class="header-section-number">2.9</span> Whitening</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">ICA with Python</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Here we repeat that workflow in Python with scikit-learn. The simulation contains three latent signals, immune activation, metabolism, and cell cycle activity, that are mixed across genes. For the derivation of FastICA and the implementation from scratch, refer to the <a href="./index.html#math-behind-ica">mathematics section</a> in the previous chapter.</p>
+<section id="setup" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">2.1</span> Setup</h2>
+<p>We use <code>sklearn.decomposition.FastICA</code> and <code>sklearn.decomposition.PCA</code>. Preprocessing is done with <code>sklearn.preprocessing.StandardScaler</code>, and plots are made with <code>matplotlib</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Software versions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>numpy</code> 2.5.3, <code>pandas</code> 3.0.6, <code>scikit-learn</code> 1.9.1, <code>matplotlib</code> 3.11.2. The <code>whiten</code> argument of <code>FastICA</code> changed its default in scikit-learn 1.3, so the exact argument names used below assume a reasonably recent scikit-learn version. Check <code>sklearn.__version__</code> if anything below behaves differently.</p>
+</div>
+</div>
+</section>
+<section id="simulate-expression-data" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="simulate-expression-data"><span class="header-section-number">2.2</span> Simulate expression data</h2>
+<p>The design matches the R example: 2,000 cells, 1,000 genes, and three latent sources. Immune activity has an exponential contribution, metabolism is normally distributed within each cluster, and cell cycle takes one of two values. A positive loading matrix mixes the sources across genes, after which Gaussian noise is added. The seed is fixed, but R and Python use different random-number generators, so the values are not expected to match across chapters.</p>
+<p>Throughout this chapter, rows are cells and columns are genes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA, FastICA</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">123</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>n_genes, n_cells, n_sources, n_clusters <span class="op">=</span> <span class="dv">1000</span>, <span class="dv">2000</span>, <span class="dv">3</span>, <span class="dv">5</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>cells_per_cluster <span class="op">=</span> n_cells <span class="op">//</span> n_clusters</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>cluster_means <span class="op">=</span> np.array([</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">3.0</span>, <span class="fl">0.5</span>],   <span class="co"># Cluster 1: High immune, low metabolism</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.1</span>, <span class="fl">2.0</span>],   <span class="co"># Cluster 2: Low immune, high metabolism</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.5</span>, <span class="fl">1.5</span>],   <span class="co"># Cluster 3: Moderate all</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">3.0</span>, <span class="fl">2.5</span>],   <span class="co"># Cluster 4: High in all</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.1</span>, <span class="fl">0.1</span>],   <span class="co"># Cluster 5: Low in all</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>latent_blocks, cluster_labels <span class="op">=</span> [], []</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_clusters):</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    immune <span class="op">=</span> rng.exponential(<span class="fl">1.0</span>, cells_per_cluster) <span class="op">+</span> cluster_means[i, <span class="dv">0</span>]</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    metabolism <span class="op">=</span> rng.normal(cluster_means[i, <span class="dv">1</span>], <span class="fl">0.5</span>, cells_per_cluster)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    cell_cycle <span class="op">=</span> rng.binomial(<span class="dv">1</span>, <span class="fl">0.5</span>, cells_per_cluster) <span class="op">*</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    latent_blocks.append(np.column_stack([immune, metabolism, cell_cycle]))</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    cluster_labels <span class="op">+=</span> [<span class="ss">f"Cluster </span><span class="sc">{</span>i <span class="op">+</span> <span class="dv">1</span><span class="sc">}</span><span class="ss">"</span>] <span class="op">*</span> cells_per_cluster</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>latent_sources <span class="op">=</span> np.vstack(latent_blocks)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>cluster_labels <span class="op">=</span> np.array(cluster_labels)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>gene_loadings <span class="op">=</span> np.<span class="bu">abs</span>(rng.standard_normal((n_genes, n_sources)))</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>expression_matrix <span class="op">=</span> latent_sources <span class="op">@</span> gene_loadings.T</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>expression_matrix <span class="op">+=</span> rng.normal(scale<span class="op">=</span><span class="fl">1.0</span>, size<span class="op">=</span>(n_cells, n_genes))</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"latent_sources:"</span>, latent_sources.shape)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"expression_matrix:"</span>, expression_matrix.shape)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>latent_sources: (2000, 3)
+expression_matrix: (2000, 1000)</code></pre>
+<div class="visual-card">
+<div id="fig-py-raw-sources" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three histograms side by side. The first, Immune, is right-skewed with a long tail toward high values. The second, Metabolism, is roughly bell-shaped and symmetric. The third, Cell cycle, has exactly two bars at -1 and +1 of similar height.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-raw-sources-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/07-python-raw-sources.svg" class="img-fluid figure-img" alt="Three histograms side by side. The first, Immune, is right-skewed with a long tail toward high values. The second, Metabolism, is roughly bell-shaped and symmetric. The third, Cell cycle, has exactly two bars at -1 and +1 of similar height.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-raw-sources-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Distribution of the three simulated latent sources, before mixing. Immune activity is right-skewed, metabolism is approximately Gaussian, and cell cycle is a binary ±1 signal.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="use-pca-as-a-reference" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="use-pca-as-a-reference"><span class="header-section-number">2.3</span> Use PCA as a reference</h2>
+<p>As a reference, we run PCA after centering and scaling each gene. <code>StandardScaler</code> uses the population standard deviation (<code>ddof=0</code>), whereas R’s <code>scale()</code> uses the sample standard deviation (<code>ddof=1</code>). In this example that difference multiplies every standardized gene by the same constant, so it does not change the PCA directions.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>scaled_data <span class="op">=</span> StandardScaler().fit_transform(expression_matrix)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>pca_scores <span class="op">=</span> pca.fit_transform(scaled_data)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pca_scores.shape)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>(2000, 3)</code></pre>
+<div class="visual-card">
+<div id="fig-py-pca-scores" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of 2000 points in PC1-PC2 space, colored by five cluster colors. The clusters overlap substantially and are not cleanly separated by the first two principal components.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-pca-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/08-python-pca-scores.png" class="img-fluid figure-img" alt="Scatter plot of 2000 points in PC1-PC2 space, colored by five cluster colors. The clusters overlap substantially and are not cleanly separated by the first two principal components.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-pca-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: PCA score plot (PC1 vs PC2), colored by the five simulated biological clusters.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-py-pca-vs-truth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A three by three grid of scatter plots, rows are PC1 through PC3, columns are Immune, Metabolism, and Cell cycle. None of the nine panels shows a clean one to one linear relationship.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-pca-vs-truth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/09-python-pca-vs-truth.png" class="img-fluid figure-img" alt="A three by three grid of scatter plots, rows are PC1 through PC3, columns are Immune, Metabolism, and Cell cycle. None of the nine panels shows a clean one to one linear relationship.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-pca-vs-truth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.3: Each principal component plotted against each true latent source. Several relationships are strong, but each PC still combines more than one source rather than providing a one-to-one recovery.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>PCA captures much of the simulated structure, but the panels show that a PC can be related to several sources. PCA orders directions by variance; it does not try to recover one independent process per component.</p>
+</section>
+<section id="fit-fastica" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="fit-fastica"><span class="header-section-number">2.4</span> Fit FastICA</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ica <span class="op">=</span> FastICA(n_components<span class="op">=</span><span class="dv">3</span>, random_state<span class="op">=</span><span class="dv">123</span>, whiten<span class="op">=</span><span class="st">"unit-variance"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>S <span class="op">=</span> ica.fit_transform(scaled_data)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"S:"</span>, S.shape)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"components_:"</span>, ica.components_.shape)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"mixing_:"</span>, ica.mixing_.shape)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"mean_:"</span>, ica.mean_.shape)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"n_iter_:"</span>, ica.n_iter_)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>S: (2000, 3)
+components_: (3, 1000)
+mixing_: (1000, 3)
+mean_: (1000,)
+n_iter_: 5</code></pre>
+<p><code>fit_transform(X)</code> returns the estimated component scores <code>S</code>, with one row per cell and one column per component. This has the same layout as R’s <code>ica_result$S</code>.</p>
+<ul>
+<li><strong><code>components_</code></strong>, shape <code>(n_components, n_features)</code>: the unmixing operator. Applied to the centered data, it produces <code>S</code>. This plays the role of R’s <code>W</code> combined with the whitening step, not R’s <code>A</code>.</li>
+<li><strong><code>mixing_</code></strong>, shape <code>(n_features, n_components)</code>: the pseudo-inverse of <code>components_</code>, i.e.&nbsp;the matrix that maps sources back onto genes. This is the Python equivalent of R’s mixing matrix <code>A</code>, but transposed. R’s <code>A</code> is <code>n.comp</code> rows by <code>p</code> genes, so a component’s gene signature is a <strong>row</strong> of <code>A</code>. scikit-learn’s <code>mixing_</code> is <code>p</code> genes by <code>n_components</code>, so a component’s gene signature is a <strong>column</strong> of <code>mixing_</code>.</li>
+<li><strong><code>mean_</code></strong>, shape <code>(n_features,)</code>: the per-gene mean subtracted before whitening. Only set when <code>whiten</code> is not <code>False</code>.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Locate component loadings in each implementation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In scikit-learn, components are <strong>columns</strong> of <code>mixing_</code>; in R’s <code>fastICA</code>, they are <strong>rows</strong> of <code>A</code>. Thus, <code>mixing_[i, :]</code> does not correspond to <code>A[i, ]</code>.</p>
+</div>
+</div>
+</section>
+<section id="match-components-to-the-simulated-sources" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="match-components-to-the-simulated-sources"><span class="header-section-number">2.5</span> Match components to the simulated sources</h2>
+<p>ICA components have no intrinsic order. To compare them with the known simulated signals, we calculate every component–source correlation and match on absolute correlation. Absolute values are used because an ICA component and all of its loadings may be multiplied by -1 without changing the fitted model.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> np.corrcoef(np.hstack([S, latent_sources]).T)[:<span class="dv">3</span>, <span class="dv">3</span>:]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>corr_df <span class="op">=</span> pd.DataFrame(corr, index<span class="op">=</span>[<span class="st">"IC1"</span>, <span class="st">"IC2"</span>, <span class="st">"IC3"</span>],</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                        columns<span class="op">=</span>[<span class="st">"Immune"</span>, <span class="st">"Metabolism"</span>, <span class="st">"Cell cycle"</span>])</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(corr_df.<span class="bu">round</span>(<span class="dv">3</span>))</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>best_match <span class="op">=</span> np.<span class="bu">abs</span>(corr).argmax(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>names <span class="op">=</span> [<span class="st">"Immune"</span>, <span class="st">"Metabolism"</span>, <span class="st">"Cell cycle"</span>]</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>):</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    j <span class="op">=</span> best_match[i]</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"IC</span><span class="sc">{</span>i<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss"> -&gt; </span><span class="sc">{</span>names[j]<span class="sc">}</span><span class="ss"> (r = </span><span class="sc">{</span>corr[i, j]<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>     Immune  Metabolism  Cell cycle
+IC1  -0.028      -0.009      -0.999
+IC2   0.028      -0.980      -0.004
+IC3  -0.999      -0.193      -0.004
+IC1 -&gt; Cell cycle (r = -0.999)
+IC2 -&gt; Metabolism (r = -0.980)
+IC3 -&gt; Immune (r = -0.999)</code></pre>
+<div class="visual-card">
+<div id="fig-py-match-heatmap" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A three by three heatmap. The diagonal from top-left is not the strongest path. Instead IC1 matches Cell cycle, IC2 matches Metabolism, and IC3 matches Immune, each with a value close to 1, while all other cells are close to 0.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-match-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/10-python-match-heatmap.svg" class="img-fluid figure-img" alt="A three by three heatmap. The diagonal from top-left is not the strongest path. Instead IC1 matches Cell cycle, IC2 matches Metabolism, and IC3 matches Immune, each with a value close to 1, while all other cells are close to 0.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-match-heatmap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.4: Absolute correlation between each estimated independent component and each true latent source. Each estimated component matches exactly one source closely, and the match is not in index order.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>In this fit, IC1 matches cell cycle, IC2 matches metabolism, and IC3 matches immune activity. A different initialization may return the same signals in different columns or with reversed signs, so later analyses should match components by their values rather than by column number.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Component signs can reverse
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All three correlations are negative in this fit. The magnitude of IC3’s correlation with immune activity (<code>|r| = 0.999</code>) indicates the quality of the match. Reversing both the IC3 scores and its column of <code>mixing_</code> gives an equivalent representation of the fitted model.</p>
+</div>
+</div>
+</section>
+<section id="plot-the-component-scores" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="plot-the-component-scores"><span class="header-section-number">2.6</span> Plot the component scores</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="fl">5.5</span>, <span class="dv">5</span>))</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, label <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">sorted</span>(<span class="bu">set</span>(cluster_labels)), start<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> cluster_labels <span class="op">==</span> label</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    ax.scatter(S[mask, <span class="dv">0</span>], S[mask, <span class="dv">1</span>], s<span class="op">=</span><span class="dv">6</span>, label<span class="op">=</span>label, alpha<span class="op">=</span><span class="fl">0.6</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"IC1"</span>)<span class="op">;</span> ax.set_ylabel(<span class="st">"IC2"</span>)<span class="op">;</span> ax.legend(markerscale<span class="op">=</span><span class="dv">2</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="visual-card">
+<div id="fig-py-ica-scores" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of 2000 points in IC1-IC2 space. IC1 forms two narrow vertical bands corresponding to the two cell cycle states. Cluster colors overlap but shift along IC2.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-ica-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/11-python-ica-scores.png" class="img-fluid figure-img" alt="Scatter plot of 2000 points in IC1-IC2 space. IC1 forms two narrow vertical bands corresponding to the two cell cycle states. Cluster colors overlap but shift along IC2.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-ica-scores-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.5: ICA score plot, IC1 vs IC2, colored by the simulated clusters. IC1 separates the two cell cycle states into vertical bands, while IC2 captures the metabolic signal and partially separates clusters with different metabolic means.
+</figcaption>
+</figure>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-py-ica-density" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three histograms. The first is bimodal with two peaks. The second is roughly bell-shaped. The third is left-skewed with a long tail.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-py-ica-density-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/12-python-ica-density.svg" class="img-fluid figure-img" alt="Three histograms. The first is bimodal with two peaks. The second is roughly bell-shaped. The third is left-skewed with a long tail.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-py-ica-density-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.6: Distribution of each recovered independent component. Compare the shapes with the true source distributions in the first figure: IC1 is bimodal like cell cycle, IC2 is approximately bell-shaped like metabolism, and IC3 is left-skewed because it recovers the negative of immune activity.
+</figcaption>
+</figure>
+</div>
+</div>
+</section>
+<section id="identify-genes-with-large-mixing-weights" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="identify-genes-with-large-mixing-weights"><span class="header-section-number">2.7</span> Identify genes with large mixing weights</h2>
+<p>A component’s gene signature is a <strong>column</strong> of <code>mixing_</code>. For IC3, the component matched to immune activity above:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>loadings <span class="op">=</span> ica.mixing_[:, <span class="dv">2</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>top_genes <span class="op">=</span> np.argsort(<span class="op">-</span>np.<span class="bu">abs</span>(loadings))[:<span class="dv">10</span>]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> g <span class="kw">in</span> top_genes:</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"gene_</span><span class="sc">{</span>g <span class="op">+</span> <span class="dv">1</span><span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>loadings[g]<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>gene_801: -0.973
+gene_443: -0.972
+gene_497: -0.969
+gene_745: -0.969
+gene_16: -0.968
+gene_85: -0.965
+gene_535: -0.963
+gene_462: -0.960
+gene_407: -0.957
+gene_800: -0.956</code></pre>
+<p>The largest absolute weights are negative because this fit represents immune activity with a reversed component sign. The signs are meaningful only relative to other genes in the same component; reversing all scores and weights would describe the same fit.</p>
+</section>
+<section id="useful-fastica-arguments" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="useful-fastica-arguments"><span class="header-section-number">2.8</span> Useful FastICA arguments</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Python (<code>FastICA</code>)</th>
+<th>R (<code>fastICA</code>)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>n_components</code></td>
+<td><code>n.comp</code></td>
+<td>Number of independent components to estimate.</td>
+</tr>
+<tr class="even">
+<td><code>algorithm</code> (“parallel”, “deflation”)</td>
+<td><code>alg.typ</code> (“parallel”, “deflation”)</td>
+<td>Whether components are extracted jointly (“parallel”) or one at a time (“deflation”).</td>
+</tr>
+<tr class="odd">
+<td><code>fun</code> (“logcosh”, “exp”, “cube”)</td>
+<td><code>fun</code> (“logcosh”, “exp”)</td>
+<td>The contrast function approximating negentropy. scikit-learn additionally offers <code>"cube"</code>, which R does not have.</td>
+</tr>
+<tr class="even">
+<td><code>fun_args</code> (e.g.&nbsp;<code>{"alpha": 1.0}</code>)</td>
+<td><code>alpha</code></td>
+<td>For <code>fun="logcosh"</code>, R’s single <code>alpha</code> corresponds to <code>fun_args={"alpha": ...}</code> in Python.</td>
+</tr>
+<tr class="odd">
+<td><code>max_iter</code></td>
+<td><code>maxit</code></td>
+<td>Maximum fixed-point iterations. Both default to 200.</td>
+</tr>
+<tr class="even">
+<td><code>tol</code></td>
+<td><code>tol</code></td>
+<td>Convergence tolerance. Both default to <code>1e-4</code>.</td>
+</tr>
+<tr class="odd">
+<td><code>random_state</code></td>
+<td>(set via <code>set.seed()</code> before the call)</td>
+<td>Controls the random initial unmixing matrix.</td>
+</tr>
+<tr class="even">
+<td><code>whiten</code> (“unit-variance”, “arbitrary-variance”, <code>False</code>)</td>
+<td>(whitening is always performed, via <code>K</code>)</td>
+<td>scikit-learn can skip whitening if the data is already whitened. R’s <code>fastICA</code> always whitens internally.</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>whiten</code> default changed in scikit-learn 1.3
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Before scikit-learn 1.3, <code>whiten</code> defaulted to <code>True</code> and used what is now called <code>"arbitrary-variance"</code> scaling. From 1.3 onward the default is <code>"unit-variance"</code>, which rescales each recovered source to unit variance. Check <code>sklearn.__version__</code> before relying on this default in other environments.</p>
+</div>
+</div>
+</section>
+<section id="whitening" class="level2" data-number="2.9">
+<h2 data-number="2.9" class="anchored" data-anchor-id="whitening"><span class="header-section-number">2.9</span> Whitening</h2>
+<p><code>FastICA</code> whitens the data internally before its fixed-point iterations. The <a href="./index.html#centering-and-whitening">whitening derivation</a> in the previous chapter explains this step and shows its manual implementation.</p>
+<p>The <a href="./exercises.html">next chapter</a> applies ICA in both R and Python to a real gene expression dataset.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Independent Component Analysis (ICA)">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Independent Component Analysis (ICA)</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./exercises.html" class="pagination-link" aria-label="Exercises: ICA of leukemia gene expression">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Exercises: ICA of leukemia gene expression</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
